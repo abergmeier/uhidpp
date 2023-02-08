@@ -2,6 +2,7 @@
 mod test {
     use std::fs::File;
     use std::os::unix::prelude::AsRawFd;
+    use test_log::test;
 
     use crate::{
         find_application_collection, ApplicationCollection, Devinfo, HIDIOCGDEVINFO,
