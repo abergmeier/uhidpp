@@ -1,10 +1,9 @@
 [package]
 name = "hiddev-sys"
 description = "Lowlevel bindings for hiddev devices"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "GPL-2.0-only"
-license-file = "../LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
