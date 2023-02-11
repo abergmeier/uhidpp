@@ -1,5 +1,6 @@
-mod lib_test;
+mod field;
 
+pub use field::FieldInfo;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
@@ -53,6 +54,12 @@ pub struct ReportInfo {
     pub num_fields: u32,
 }
 
+pub enum ReportIds {
+    Short = 0x10,
+    Long = 0x11,
+    VeryLong = 0x12,
+}
+
 impl Display for ReportInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -104,33 +111,36 @@ impl Display for UsageRefMulti {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{{ num_values: {}, uref: {}, values: {:X?} }}",
-            self.num_values, self.uref, self.values
-        )
+            "{{ num_values: {}, uref: {}, values:",
+            self.num_values, self.uref,
+        )?;
+        let values = &self.values;
+        // TODO: This seems inefficient!
+        let last_index = values.iter().enumerate().rev().fold(None, |acc, (i, v)| {
+            if acc.is_some() {
+                return acc;
+            }
+            if *v == 0x0 {
+                None
+            } else {
+                Some(i)
+            }
+        });
+        last_index.map_or(Ok(()), |index| {
+            // TODO: This seems inefficient!
+            let s = values[0..=index]
+                .as_ref()
+                .iter()
+                .map(|v| format!("{:#0x}", *v))
+                .collect::<Vec<String>>()
+                .join(", ");
+            write!(f, " {}", s)
+        })?;
+        f.write_str(" }")
     }
 }
 
-#[derive(Default)]
-#[repr(C)]
-pub struct FieldInfo {
-    pub report_type: u32,
-    pub report_id: u32,
-    pub field_index: u32,
-    pub maxusage: u32,
-    pub flags: u32,
-    pub physical: u32,
-    /// physical usage for this field
-    pub logical: u32,
-    /// logical usage for this field
-    pub application: u32,
-    /// application usage for this field
-    pub logical_minimum: i32,
-    pub logical_maximum: i32,
-    pub physical_minimum: i32,
-    pub physical_maximum: i32,
-    pub unit_exponent: u32,
-    pub unit: u32,
-}
+
 
 #[repr(C)]
 pub struct CollectionInfo {
@@ -206,43 +216,3 @@ pub enum HIDIOCSFLAGFlag {
  * }
  */
 
-#[derive(Debug, PartialEq)]
-pub struct ApplicationCollection {
-    pub app_index: u32,
-    pub usage_code: u16,
-}
-
-pub fn find_application_collection(
-    fd: i32,
-    dev_info: &Devinfo,
-    application_collection_usage_page: u16,
-) -> nix::Result<ApplicationCollection> {
-    log::debug!(
-        "Found {} application collections",
-        dev_info.num_applications
-    );
-
-    for app_index in 0..dev_info.num_applications {
-        let usage = unsafe { HIDIOCAPPLICATION(fd, app_index) }?;
-
-        let usage_page = (usage as u32 >> 16) as u16;
-        let usage_code = ((usage as u32) & 0xFFFF) as u16;
-        if usage_page == application_collection_usage_page {
-            return Ok(ApplicationCollection {
-                app_index,
-                usage_code,
-            });
-        }
-    }
-
-    Err(nix::Error::ENOENT)
-}
-
-
-#[derive(Debug, Eq, IntoPrimitive, PartialEq, TryFromPrimitive)]
-#[repr(u32)]
-pub enum ReportType {
-    Input = 1,
-    Output,
-    Feature,
-}

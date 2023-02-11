@@ -1,4 +1,5 @@
 [workspace]
 members = [
+    "hiddev",
     "hiddev_sys",
 ]

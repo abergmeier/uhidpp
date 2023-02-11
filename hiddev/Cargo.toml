@@ -1,7 +1,7 @@
 [package]
-name = "hiddev-sys"
-description = "Lowlevel bindings for hiddev devices"
-version = "0.1.3"
+name = "hiddev"
+description = "Access to Linux hiddev devices"
+version = "0.1.0"
 edition = "2021"
 license = "GPL-2.0-only"
 
@@ -9,6 +9,7 @@ license = "GPL-2.0-only"
 
 [dependencies]
 env_logger = "0.10.0"
+hiddev-sys = { path = "../hiddev_sys", version = "0.1.3" }
 log = "0.4.17"
 nix = "0.26.2"
 num_enum = "0.5.9"
