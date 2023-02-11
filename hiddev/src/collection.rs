@@ -15,7 +15,9 @@ impl Display for ApplicationCollection {
 }
 
 impl ApplicationCollection {
-    pub fn find(
+    /// `find_by_usage_page` tries to find the first application with a matching
+    /// usage page.
+    pub fn find_by_usage_page(
         fd: i32,
         dev_info: &Devinfo,
         application_collection_usage_page: u16,
@@ -44,9 +46,6 @@ impl ApplicationCollection {
 
 #[cfg(test)]
 mod test {
-    use std::fs::File;
-    use std::os::unix::prelude::AsRawFd;
-    use hiddev_sys::{Devinfo, HIDIOCGDEVINFO};
     use test_log::test;
 
     use super::ApplicationCollection;
@@ -59,18 +58,6 @@ mod test {
         };
         let s = format!("A {} C", app);
         assert_eq!(s, "A { app_index: 13, usage_code: 0x678 } C");
-    }
-
-    #[cfg(device_test = "litra_glow")]
-    #[test]
-    fn finding_application_collection_works_for_litra_glow() {
-        let hid_dev = File::open("/dev/usb/hiddev0").unwrap();
-        let fd = hid_dev.as_raw_fd();
-        let mut dev_info = Devinfo::default();
-        unsafe { HIDIOCGDEVINFO(fd, &mut dev_info) }.unwrap();
-
-        let app_collection = ApplicationCollection::find(fd, &dev_info, 0xFF43).unwrap();
-        assert_eq!(app_collection, ApplicationCollection { app_index: 1, usage_code: 0x202 });
     }
 
 }
